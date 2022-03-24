@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform:
+  - AWS::Serverless-2016-10-31
+
+# Globals:
+
+# Conditions:
+
+# Parameters:
+
+Resources:
+  SendSMSLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./dist
+      Handler: SendSMSLambda.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      MemorySize: 128
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt SMSNotificationTopic.TopicName
+      Environment:
+        Variables:
+          SMS_TOPIC: !Ref SMSNotificationTopic
+      Events:
+        SendSMS:
+          Type: Api
+          Properties:
+            Path: /send-sms
+            Method: post
+
+  SMSNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "SMS Notification Topic"
+
+  SendSMSSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref SMSNotificationTopic
+      Protocol: sms
+      Endpoint: "+351915799852"
